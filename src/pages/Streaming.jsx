@@ -7,7 +7,7 @@ const Streaming = () => {
     const [isRecording, setIsRecording] = useState(false)
 
   return (
-    <div>
+    <div className='streamPage'>
         {isRecording ? 
         <>
         <h1>Recording...</h1>
