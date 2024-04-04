@@ -1,0 +1,13 @@
+.micButton {
+    border-radius: 100%;
+    height: 200px;
+    width: 200px;
+    background-color: gray;
+}
+
+.micButtonRecording {
+    border-radius: 100%;
+    height: 200px;
+    width: 200px;
+    background-color: red;
+}
