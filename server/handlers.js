@@ -1,5 +1,7 @@
 const handlers = {
-    Test: "hehe"
+    Test: async () => {
+        console.log("Yo\n")
+    }
 }
 
 export default handlers

@@ -51,10 +51,12 @@ const Streaming = () => {
               </button>
             </>
           )}
+          <h2>Your request:</h2>
+          <textarea className="requestText" disabled></textarea>
         </Col>
         <Col>
           <h1>Response:</h1>
-          <textarea className="aiResponse"></textarea>
+          <textarea className="aiResponse" disabled></textarea>
         </Col>
       </Row>
       <Row>
