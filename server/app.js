@@ -22,7 +22,7 @@ ViteExpress.config({ printViteDevServerHost: true });
 io.on("connection", (socket) => {
     console.log(`Connected with: ${socket.id}`)
     
-    socket.on("audio_data", socketHandlers.reciveStatic)
+    // socket.on("audio_data", socketHandlers.reciveStatic)
 });
 
 app.use(morgan("dev"));
