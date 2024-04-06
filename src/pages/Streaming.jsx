@@ -5,6 +5,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import "../css/Streaming.css";
 
 const Streaming = () => {
+
   const [isRecording, setIsRecording] = useState(false);
 
   return (

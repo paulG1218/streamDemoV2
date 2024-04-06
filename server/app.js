@@ -32,6 +32,8 @@ app.use(
   session({ secret: "ssshhhhh", saveUninitialized: true, resave: false })
 );
 
+// app.post("/api/static", handlers.staticTranscription)
+
 httpServer.listen(socketPort, () => {console.log(`Socket is listening on http://localhost:${socketPort}`)})
 
 ViteExpress.listen(app, port, () =>

@@ -1,64 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BsFillMicFill } from "react-icons/bs";
 import { Container, Row, Col } from "react-bootstrap";
 import { IconContext } from "react-icons";
 import { io } from "socket.io-client";
+import axios from "axios";
 import "../css/Streaming.css";
 
-const socket = io("http://localhost:9000")
+// const socket = io("http://localhost:9000");
 
+const SpeechRecogniton = window.SpeechRecognition || window.webkitSpeechRecognition
+const mic = new SpeechRecogniton()
+
+mic.continuous = true
+mic.lang = "en-US"
 const Static = () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [userRequest, setUserRequest] = useState('');
 
-    const [isRecording, setIsRecording] = useState(false)
-    const [mediaRecorder, setMediaRecorder] = useState(null);
+  useEffect(() => {
+    handleListen()
+  }, [isRecording])
+//   const [mediaRecorder, setMediaRecorder] = useState(null);
 
-    socket.on("connect", () => {
-        console.log(socket.id); // 
-      });
+//   socket.on("connect", () => {
+//     console.log(socket.id); //
+//   });
 
-    const handleStartRecord = async (e) => {
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const options = { mimeType: 'audio/webm' };
-            const recorder = new MediaRecorder(stream, options);
-            let audioChunks = [];
-    
-            recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    audioChunks.push(e.data);
-                }
-            };
-    
-            recorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                // Convert the Blob to an ArrayBuffer before sending
-                audioBlob.arrayBuffer().then(arrayBuffer => {
-                    // Ensure you have a condition to check socket connection or adapt as needed
-                    if (socket.connected) {
-                        socket.emit('audio_data', arrayBuffer);
-                    }
-                });
-            };
-    
-            recorder.start();
-            // Store the recorder somewhere for later use, e.g., to stop the recording
-            setMediaRecorder(recorder);
-            setIsRecording(true);
-        } catch (error) {
-            console.error('Error accessing the microphone', error);
+const handleListen = () => {
+    if (isRecording) {
+        mic.start()
+        mic.onend = () => {
+            console.log("continue..")
+            mic.start
         }
-    };
-    
-    // Ensure you have a way to stop the recording, which triggers `onstop`
-    // For example, `mediaRecorder.stop()` when the user clicks a "stop recording" button.
-
-    const handleStopRecord = () => {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop(); // This triggers the `onstop` event in your `handleStartRecord`
-            setIsRecording(false); // Assuming you use this to update the UI or state
+    } else {
+        mic.stop()
+        mic.onend = () => {
+            console.log("stopped")
         }
-    };
+    }
+    mic.onstart = () => {
+        console.log("mic on")
+    }
+    mic.onresult = event => {
+        const transcript = Array.from(event.results)
+        .map(result => result[0])
+        .map(result => result.transcript)
+        .join('')
+        setUserRequest(transcript)
+        console.log(userRequest)
+    }
+    mic.onerror = event => {
+        console.log(event)
+        setUserRequest("Try again")
+    }
+}
 
   return (
     <Container>
@@ -71,12 +67,11 @@ const Static = () => {
       </Row>
       <Row>
         <Col>
-          {isRecording ? (
             <>
-              <h1>Recording...</h1>
+              <h1>{isRecording ? 'Recording...' : 'Record your request:'}</h1>
               <button
-                className="micButtonRecording"
-                onClick={() => handleStopRecord()}
+                className={isRecording ? "micButtonRecording" : "micButton"}
+                onClick={() => setIsRecording(prevState => !prevState)}
               >
                 <IconContext.Provider
                   value={{ size: "4em", className: "global-class-name" }}
@@ -87,25 +82,8 @@ const Static = () => {
                 </IconContext.Provider>
               </button>
             </>
-          ) : (
-            <>
-              <h1>Record your request:</h1>
-              <button
-                className="micButton"
-                onClick={() => handleStartRecord()}
-              >
-                <IconContext.Provider
-                  value={{ size: "4em", className: "global-class-name" }}
-                >
-                  <div>
-                    <BsFillMicFill />
-                  </div>
-                </IconContext.Provider>
-              </button>
-            </>
-          )}
           <h2>Your request:</h2>
-          <textarea className="requestText" disabled></textarea>
+          <textarea className="requestText" disabled value={userRequest}></textarea>
         </Col>
         <Col>
           <h1>Response:</h1>

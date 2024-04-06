@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/dom-speech-recognition": "^0.0.4",
     "axios": "^1.6.8",
     "bootstrap": "^5.3.3",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
+    "fs": "^0.0.1-security",
     "morgan": "^1.10.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.2",
