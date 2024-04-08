@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 import handlers from "./handlers.js"
 import fs from "fs"
 import OpenAI from "openai";
+import socketHandlers from "./socketHandlers.js";
 
 const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
 
@@ -22,9 +23,7 @@ const io = new Server(httpServer, {
   })
 ViteExpress.config({ printViteDevServerHost: true });
 
-io.on("connection", (socket) => {
-    console.log(`Connected with: ${socket.id}`)
-});
+io.on("connection", socketHandlers.handleSocket);
 
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: false }));

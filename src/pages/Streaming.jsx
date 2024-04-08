@@ -18,6 +18,7 @@ mic.lang = "en-US";
 const Streaming = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [userRequest, setUserRequest] = useState("");
+  const [transcriptionFailed, setTranscriptionFailed] = useState(false)
 
   useEffect(() => {
     handleListen();
@@ -44,12 +45,15 @@ const Streaming = () => {
         .map((result) => result[0])
         .map((result) => result.transcript)
         .join("");
+        setTranscriptionFailed(false)
       setUserRequest(transcript);
-      const res = await axios.post("/api/streaming", { prompt: transcript });
-      setAiResponse(res.data.message);
+      if (socket.connected) {
+        socket.emit("prompt", transcript)
+      }
     };
     mic.onerror = (event) => {
       console.log(event);
+      setTranscriptionFailed(true)
       setUserRequest("Try again");
     };
   };
@@ -85,6 +89,7 @@ const Streaming = () => {
             className="requestText"
             disabled
             value={userRequest}
+            style={transcriptionFailed ? {color: "red"} : {color: "black"}}
           ></textarea>
         </Col>
         <Col>
