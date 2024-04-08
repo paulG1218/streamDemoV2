@@ -5,8 +5,6 @@ import { IconContext } from "react-icons";
 import axios from "axios";
 import "../css/Streaming.css";
 
-// const socket = io("http://localhost:9000");
-
 const SpeechRecogniton =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = new SpeechRecogniton();
@@ -17,6 +15,7 @@ mic.lang = "en-US";
 const Static = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [userRequest, setUserRequest] = useState("");
+  const [aiResponse, setAiResponse] = useState("")
 
   useEffect(() => {
     handleListen();
@@ -38,13 +37,14 @@ const Static = () => {
     mic.onstart = () => {
       console.log("static mic on");
     };
-    mic.onresult = (event) => {
+    mic.onresult = async (event) => {
       const transcript = Array.from(event.results)
         .map((result) => result[0])
         .map((result) => result.transcript)
         .join("");
       setUserRequest(transcript);
-      console.log(userRequest);
+      const res = await axios.post("/api/static", {prompt: transcript})
+      setAiResponse(res.data.message)
     };
     mic.onerror = (event) => {
       console.log(event);
@@ -87,7 +87,7 @@ const Static = () => {
         </Col>
         <Col>
           <h1>Response:</h1>
-          <textarea className="aiResponse" disabled></textarea>
+          <textarea className="aiResponse" disabled value={aiResponse}></textarea>
         </Col>
       </Row>
       <Row>

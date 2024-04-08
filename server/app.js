@@ -5,7 +5,10 @@ import session from "express-session";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import handlers from "./handlers.js"
-import socketHandlers from "./socketHandlers.js";
+import fs from "fs"
+import OpenAI from "openai";
+
+const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
 
 const app = express();
 const httpServer = createServer(app)
@@ -21,8 +24,6 @@ ViteExpress.config({ printViteDevServerHost: true });
 
 io.on("connection", (socket) => {
     console.log(`Connected with: ${socket.id}`)
-    
-    // socket.on("audio_data", socketHandlers.reciveStatic)
 });
 
 app.use(morgan("dev"));
@@ -32,7 +33,8 @@ app.use(
   session({ secret: "ssshhhhh", saveUninitialized: true, resave: false })
 );
 
-// app.post("/api/static", handlers.staticTranscription)
+app.post("/api/static", handlers.staticAIResponse)
+app.post("/api/streaming", handlers.streamingAIResponse)
 
 httpServer.listen(socketPort, () => {console.log(`Socket is listening on http://localhost:${socketPort}`)})
 

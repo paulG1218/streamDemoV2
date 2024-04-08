@@ -3,49 +3,55 @@ import { BsFillMicFill } from "react-icons/bs";
 import { IconContext } from "react-icons";
 import { Container, Row, Col } from "react-bootstrap";
 import { io } from "socket.io-client";
+import axios from "axios";
 import "../css/Streaming.css";
 
 const socket = io("http://localhost:9000");
 
+const SpeechRecogniton =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+const mic = new SpeechRecogniton();
+
+mic.continuous = true;
+mic.lang = "en-US";
 
 const Streaming = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [userRequest, setUserRequest] = useState("");
-  const [mediaRecorder, setMediaRecorder] = useState(null)
-  const [audioSrc, setAudioSrc] = useState(null)
 
   useEffect(() => {
     handleListen();
   }, [isRecording]);
 
   const handleListen = async () => {
-    if(isRecording){
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream);
-            let audioChunks = [];
-    
-            recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    audioChunks.push(e.data);
-                }
-            };
-    
-            recorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                const audioURL = window.URL.createObjectURL(audioBlob)
-                console.log(audioURL)
-                setAudioSrc(audioURL)
-            };
-    
-            recorder.start();
-            setMediaRecorder(recorder);
-        } catch (error) {
-            console.error('Error accessing the microphone', error);
-        }
-    } else if (mediaRecorder) {
-        mediaRecorder.stop()
+    if (isRecording) {
+      mic.start();
+      mic.onend = () => {
+        console.log("continue..");
+        mic.start;
+      };
+    } else {
+      mic.stop();
+      mic.onend = () => {
+        console.log("stream mic stopped");
+      };
     }
+    mic.onstart = () => {
+      console.log("stream mic on");
+    };
+    mic.onresult = async (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0])
+        .map((result) => result.transcript)
+        .join("");
+      setUserRequest(transcript);
+      const res = await axios.post("/api/streaming", { prompt: transcript });
+      setAiResponse(res.data.message);
+    };
+    mic.onerror = (event) => {
+      console.log(event);
+      setUserRequest("Try again");
+    };
   };
 
   return (
@@ -84,7 +90,6 @@ const Streaming = () => {
         <Col>
           <h1>Response:</h1>
           <textarea className="aiResponse" disabled></textarea>
-          <audio className="palyback" controls={true} src={audioSrc}></audio>
         </Col>
       </Row>
       <Row>
