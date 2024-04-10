@@ -15,7 +15,8 @@ mic.lang = "en-US";
 const Static = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [userRequest, setUserRequest] = useState("");
-  const [aiResponse, setAiResponse] = useState("")
+  const [aiResponse, setAiResponse] = useState("");
+  const [transcriptionFailed, setTranscriptionFailed] = useState(false);
 
   useEffect(() => {
     handleListen();
@@ -42,14 +43,20 @@ const Static = () => {
         .map((result) => result[0])
         .map((result) => result.transcript)
         .join("");
+      setTranscriptionFailed(false);
       setUserRequest(transcript);
-      const res = await axios.post("/api/static", {prompt: transcript})
-      setAiResponse(res.data.message)
+      const res = await axios.post("/api/static", { prompt: transcript });
+      setAiResponse(res.data.message);
+      console.log(res.data.audioPath);
+      const AIAudio = new Audio(res.data.audioPath);
+      AIAudio.load();
+      AIAudio.play();
     };
-    mic.onerror = (event) => {
-      console.log(event);
-      setUserRequest("Try again");
-    };
+  };
+  mic.onerror = (event) => {
+    console.log(event);
+    setTranscriptionFailed(true);
+    setUserRequest("Try again");
   };
 
   return (
@@ -83,11 +90,16 @@ const Static = () => {
             className="requestText"
             disabled
             value={userRequest}
+            style={transcriptionFailed ? { color: "red" } : { color: "black" }}
           ></textarea>
         </Col>
         <Col>
           <h1>Response:</h1>
-          <textarea className="aiResponse" disabled value={aiResponse}></textarea>
+          <textarea
+            className="aiResponse"
+            disabled
+            value={aiResponse}
+          ></textarea>
         </Col>
       </Row>
       <Row>

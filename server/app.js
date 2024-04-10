@@ -17,7 +17,7 @@ const port = "8000";
 const socketPort = "9000"
 const io = new Server(httpServer, {
     cors: {
-      origin: "*", // or "*" to allow any origin
+      origin: "*",
       methods: ["GET", "POST"]
     }
   })
