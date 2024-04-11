@@ -19,6 +19,7 @@ const Streaming = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [userRequest, setUserRequest] = useState("");
   const [transcriptionFailed, setTranscriptionFailed] = useState(false);
+  const [AIResponse, setAIResponse] = useState('')
 
   useEffect(() => {
     handleListen();
@@ -58,6 +59,14 @@ const Streaming = () => {
     };
   };
 
+  socket.on("ai_response_start", async (text) => {
+    setAIResponse('')
+  })
+
+  socket.on("ai_response_continue", async (text) =>{
+    setAIResponse(AIResponse + text)
+  })
+
   return (
     <Container>
       <Row>
@@ -94,7 +103,7 @@ const Streaming = () => {
         </Col>
         <Col>
           <h1>Response:</h1>
-          <textarea className="aiResponse" disabled></textarea>
+          <textarea className="aiResponse" value={AIResponse} disabled></textarea>
         </Col>
       </Row>
       <Row>

@@ -23,6 +23,7 @@
 }
 
 .pageHeader {
+    min-width: fit-content;
     border-bottom: 3px solid black;
     margin-bottom: 4vh;
     white-space: nowrap;

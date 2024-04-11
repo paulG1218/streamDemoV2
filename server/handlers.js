@@ -7,7 +7,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 console.log(process.env.OPENAI_API_KEY);
 
-const myAssistant = await openai.beta.assistants.retrieve(
+const staticAssistant = await openai.beta.assistants.retrieve(
   "asst_zgZ0lHzESU0gEA7uTNQuWpzH"
 );
 
@@ -27,7 +27,7 @@ const handlers = {
         content: prompt,
       });
       let run = await openai.beta.threads.runs.create(thread.id, {
-        assistant_id: myAssistant.id,
+        assistant_id: staticAssistant.id,
       });
       while (["queued", "in_progress", "cancelling"].includes(run.status)) {
         await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for 1 second
