@@ -37,6 +37,7 @@ const Static = () => {
     }
     mic.onstart = () => {
       console.log("static mic on");
+      setUserRequest("")
     };
     mic.onresult = async (event) => {
       const transcript = Array.from(event.results)
@@ -52,11 +53,11 @@ const Static = () => {
       AIAudio.load();
       AIAudio.play();
     };
-  };
-  mic.onerror = (event) => {
-    console.log(event);
-    setTranscriptionFailed(true);
-    setUserRequest("Try again");
+    mic.onerror = (event) => {
+      console.log(event);
+      setTranscriptionFailed(true);
+      setUserRequest("Try again");
+    };
   };
 
   return (
@@ -70,7 +71,6 @@ const Static = () => {
       </Row>
       <Row>
         <Col>
-          <>
             <h1>{isRecording ? "Recording..." : "Record your request:"}</h1>
             <button
               className={isRecording ? "micButtonRecording" : "micButton"}
@@ -84,7 +84,6 @@ const Static = () => {
                 </div>
               </IconContext.Provider>
             </button>
-          </>
           <h2>Your request:</h2>
           <textarea
             className="requestText"
