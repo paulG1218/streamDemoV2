@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import ElevenLabs from "elevenlabs-node";
-import fs from "fs";
 import path from "path";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -14,8 +13,8 @@ const staticAssistant = await openai.beta.assistants.retrieve(
 const thread = await openai.beta.threads.create();
 
 const voice = new ElevenLabs({
-  apiKey: process.env.ELEVENLABS_API_KEY, // Your API key from Elevenlabs
-  voiceId: "iP95p4xoKVk53GoZ742B", // A Voice ID from Elevenlabs
+  apiKey: process.env.ELEVENLABS_API_KEY,
+  voiceId: "iP95p4xoKVk53GoZ742B",
 });
 
 const handlers = {
@@ -38,7 +37,7 @@ const handlers = {
         voice
           .textToSpeech({
             // Required Parameters
-            fileName: "audio.mp3",
+            fileName: "staticAudio.mp3",
             textInput: messages.data[0].content[0].text.value,
             stability: 0.5,
             similarityBoost: 0.5,
@@ -48,7 +47,7 @@ const handlers = {
           })
           .then((response) => {
             console.log(response);
-            const audioPath = path.join("audio.mp3");
+            const audioPath = path.join("staticAudio.mp3");
 
             res.json({
               message: messages.data[0].content[0].text.value,

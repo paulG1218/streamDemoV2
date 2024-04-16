@@ -2,17 +2,18 @@ import React, { useState, useEffect } from "react";
 import { BsFillMicFill } from "react-icons/bs";
 import { IconContext } from "react-icons";
 import { Container, Row, Col } from "react-bootstrap";
-import { io } from "socket.io-client";
-import axios from "axios";
+import { socket } from "../Socket.jsx";
 import "../css/Streaming.css";
 
-const socket = io("http://localhost:9000");
+socket.on("connect", () => {
+  console.log("connected")
+})
 
 const SpeechRecogniton =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = new SpeechRecogniton();
 
-mic.continuous = true;
+mic.continuous = true
 mic.lang = "en-US";
 
 const Streaming = () => {
@@ -27,6 +28,7 @@ const Streaming = () => {
 
   const handleListen = async () => {
     if (isRecording) {
+        setAIResponse("")
       mic.start();
       mic.onend = () => {
         console.log("continue..");
@@ -40,6 +42,7 @@ const Streaming = () => {
     }
     mic.onstart = () => {
       console.log("stream mic on");
+      setUserRequest("")
     };
     mic.onresult = async (event) => {
       const transcript = Array.from(event.results)
@@ -59,13 +62,15 @@ const Streaming = () => {
     };
   };
 
-  socket.on("ai_response_start", async (text) => {
-    setAIResponse('')
-  })
+  
+  socket.on("text-delta", async (text) => {
+      setAIResponse(AIResponse + text)
+    })
 
-  socket.on("ai_response_continue", async (text) =>{
-    setAIResponse(AIResponse + text)
-  })
+    // socket.once("audio-buffer", (data) => {
+    //   console.log("new data")
+    //   console.log(data)
+    // })
 
   return (
     <Container>

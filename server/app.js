@@ -3,25 +3,21 @@ import ViteExpress from "vite-express";
 import morgan from "morgan";
 import session from "express-session";
 import { createServer } from "http";
-import { Server } from "socket.io";
+import { Server as SocketServer } from "socket.io";
 import handlers from "./handlers.js"
-import fs from "fs"
-import OpenAI from "openai";
 import socketHandlers from "./socketHandlers.js";
-
-const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY})
 
 const app = express();
 const httpServer = createServer(app)
 const port = "8000";
-const socketPort = "9000"
-const io = new Server(httpServer, {
+
+const io = new SocketServer(httpServer, {
     cors: {
       origin: "*",
       methods: ["GET", "POST"]
     }
   })
-ViteExpress.config({ printViteDevServerHost: true });
+ViteExpress.config({ printViteDevServerHost: true, app: app});
 
 io.on("connection", socketHandlers.handleSocket);
 
@@ -35,8 +31,8 @@ app.use(
 app.post("/api/static", handlers.staticAIResponse)
 app.post("/api/streaming", handlers.streamingAIResponse)
 
-httpServer.listen(socketPort, () => {console.log(`Socket is listening on http://localhost:${socketPort}`)})
+httpServer.listen(port, () => {
+  console.log(`Server and Socket.IO are both listening on http://localhost:${port}`);
+});
 
-ViteExpress.listen(app, port, () =>
-  console.log(`Server is listening on http://localhost:${port}`)
-);
+ViteExpress.bind(app, httpServer)
