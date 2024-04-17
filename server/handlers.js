@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import ElevenLabs from "elevenlabs-node";
+import fs from "fs"
 import path from "path";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -33,6 +34,9 @@ const handlers = {
         run = await openai.beta.threads.runs.retrieve(run.thread_id, run.id);
       }
       if (run.status === "completed") {
+        fs.unlink("staticAudio.mp3", (err) => {
+          if (err) throw err
+        })
         const messages = await openai.beta.threads.messages.list(run.thread_id);
         voice
           .textToSpeech({

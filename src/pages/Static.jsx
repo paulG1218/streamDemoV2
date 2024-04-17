@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BsFillMicFill } from "react-icons/bs";
 import { Container, Row, Col } from "react-bootstrap";
 import { IconContext } from "react-icons";
@@ -17,6 +17,8 @@ const Static = () => {
   const [userRequest, setUserRequest] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [transcriptionFailed, setTranscriptionFailed] = useState(false);
+  const [staticTime, setStaticTime] = useState(0)
+  const staticTimeRef = useRef(0)
 
   useEffect(() => {
     handleListen();
@@ -46,11 +48,13 @@ const Static = () => {
         .join("");
       setTranscriptionFailed(false);
       setUserRequest(transcript);
+      staticTimeRef.current = Date.now()
       const res = await axios.post("/api/static", { prompt: transcript });
       setAiResponse(res.data.message);
       console.log(res.data.audioPath);
       const AIAudio = new Audio(res.data.audioPath);
       AIAudio.load();
+      setStaticTime((Date.now() - staticTimeRef.current) / 1000)
       AIAudio.play();
     };
     mic.onerror = (event) => {
@@ -103,7 +107,8 @@ const Static = () => {
       </Row>
       <Row>
         <Col>
-          <h3>Total response time:</h3>
+          <h3>Time til start:</h3>
+          <h4>{staticTime} seconds</h4>
         </Col>
       </Row>
     </Container>

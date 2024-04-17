@@ -40,9 +40,8 @@ async function stream(audioStreamAsyncIterator) {
     console.log("Started streaming audio");
     for await (const chunk of audioStreamAsyncIterator) {
         console.log(chunk)
-        if (chunk.value instanceof Buffer) {
-            theSocket.emit("audio-buffer", chunk.value)
-        } else if (chunk.done) {
+        theSocket.emit("audio-buffer", chunk)
+        if (chunk.done) {
             break
         }
     }
@@ -109,6 +108,7 @@ async function textToSpeechInputStreaming(voiceId, textIterator) {
     const listenTask = stream(listen());
 
     for await (const text of textChunker(textIterator)) {
+        console.log(text)
         ws.send(JSON.stringify({ "text": text, "try_trigger_generation": true }));
     }
 

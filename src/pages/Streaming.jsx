@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BsFillMicFill } from "react-icons/bs";
 import { IconContext } from "react-icons";
 import { Container, Row, Col } from "react-bootstrap";
@@ -16,15 +16,70 @@ const mic = new SpeechRecogniton();
 mic.continuous = true
 mic.lang = "en-US";
 
+const audioContext = new AudioContext()
+
 const Streaming = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [userRequest, setUserRequest] = useState("");
   const [transcriptionFailed, setTranscriptionFailed] = useState(false);
   const [AIResponse, setAIResponse] = useState('')
+  const [streamTime, setStreamTime] = useState(0)
+  const streamTimeRef = useRef(0)
+  const audioBufferQueue = useRef([]);
+  const isProcessingAudioRef = useRef(null);
+  const prevAudioTimeRef = useRef(0);
 
   useEffect(() => {
     handleListen();
   }, [isRecording]);
+
+  useEffect(() => {
+
+
+    socket.once("audio-buffer", () => {
+      setStreamTime((Date.now() - streamTimeRef.current) / 1000)
+    })
+
+    socket.on("audio-buffer", (chunk) => {
+      if (chunk) {
+        audioBufferQueue.current.push(chunk);
+        processAudioQueue();
+      }
+    });
+
+    return () => {
+      socket.off("audio-buffer");
+    };
+  }, []);
+
+  const processAudioQueue = async () => {
+    if (isProcessingAudioRef.current) {
+      return;
+    }
+    isProcessingAudioRef.current = true;
+    while (audioBufferQueue.current.length) {
+      const chunk = audioBufferQueue.current.shift();
+      if (chunk.done) {
+        prevAudioTimeRef.current = 0;
+      } else if (chunk.value) {
+        try {
+          const buffer = await audioContext.decodeAudioData(chunk.value);
+          const source = audioContext.createBufferSource();
+          source.buffer = buffer;
+          source.connect(audioContext.destination);
+
+          const currentTime = audioContext.currentTime;
+          const startAt = Math.max(currentTime, prevAudioTimeRef.current);
+          source.start(startAt);
+          prevAudioTimeRef.current = startAt + buffer.duration;
+        } catch (error) {
+          console.error('Error decoding audio data:', error);
+        }
+      }
+    }
+
+    isProcessingAudioRef.current = false;
+  };
 
   const handleListen = async () => {
     if (isRecording) {
@@ -45,13 +100,16 @@ const Streaming = () => {
       setUserRequest("")
     };
     mic.onresult = async (event) => {
+      console.log(event)
       const transcript = Array.from(event.results)
         .map((result) => result[0])
         .map((result) => result.transcript)
         .join("");
       setTranscriptionFailed(false);
       setUserRequest(transcript);
-      if (socket.connected) {
+      if (!isRecording && socket.connected) {
+        console.log("sending...")
+        streamTimeRef.current = Date.now()
         socket.emit("prompt", transcript);
       }
     };
@@ -66,11 +124,6 @@ const Streaming = () => {
   socket.on("text-delta", async (text) => {
       setAIResponse(AIResponse + text)
     })
-
-    // socket.once("audio-buffer", (data) => {
-    //   console.log("new data")
-    //   console.log(data)
-    // })
 
   return (
     <Container>
@@ -113,7 +166,8 @@ const Streaming = () => {
       </Row>
       <Row>
         <Col>
-          <h3>Total response time:</h3>
+          <h3>Time til start:</h3>
+          <h4>{streamTime} seconds</h4>
         </Col>
       </Row>
     </Container>
