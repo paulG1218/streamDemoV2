@@ -6,25 +6,25 @@ import { socket } from "../Socket.jsx";
 import "../css/Streaming.css";
 
 socket.on("connect", () => {
-  console.log("connected")
-})
+  console.log("connected");
+});
 
 const SpeechRecogniton =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = new SpeechRecogniton();
 
-mic.continuous = true
+mic.continuous = true;
 mic.lang = "en-US";
 
-const audioContext = new AudioContext()
+const audioContext = new AudioContext();
 
 const Streaming = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [userRequest, setUserRequest] = useState("");
   const [transcriptionFailed, setTranscriptionFailed] = useState(false);
-  const [AIResponse, setAIResponse] = useState('')
-  const [streamTime, setStreamTime] = useState(0)
-  const streamTimeRef = useRef(0)
+  const [AIResponse, setAIResponse] = useState("");
+  const [streamTime, setStreamTime] = useState(0);
+  const streamTimeRef = useRef(0);
   const audioBufferQueue = useRef([]);
   const isProcessingAudioRef = useRef(null);
   const prevAudioTimeRef = useRef(0);
@@ -34,12 +34,6 @@ const Streaming = () => {
   }, [isRecording]);
 
   useEffect(() => {
-
-
-    socket.once("audio-buffer", () => {
-      setStreamTime((Date.now() - streamTimeRef.current) / 1000)
-    })
-
     socket.on("audio-buffer", (chunk) => {
       if (chunk) {
         audioBufferQueue.current.push(chunk);
@@ -53,6 +47,9 @@ const Streaming = () => {
   }, []);
 
   const processAudioQueue = async () => {
+    if (prevAudioTimeRef.current === 0) {
+      setStreamTime((Date.now() - streamTimeRef.current) / 1000);
+    }
     if (isProcessingAudioRef.current) {
       return;
     }
@@ -73,7 +70,7 @@ const Streaming = () => {
           source.start(startAt);
           prevAudioTimeRef.current = startAt + buffer.duration;
         } catch (error) {
-          console.error('Error decoding audio data:', error);
+          console.error("Error decoding audio data:", error);
         }
       }
     }
@@ -83,7 +80,6 @@ const Streaming = () => {
 
   const handleListen = async () => {
     if (isRecording) {
-        setAIResponse("")
       mic.start();
       mic.onend = () => {
         console.log("continue..");
@@ -97,10 +93,11 @@ const Streaming = () => {
     }
     mic.onstart = () => {
       console.log("stream mic on");
-      setUserRequest("")
+      setUserRequest("");
+      setAIResponse("");
+      setStreamTime(0);
     };
     mic.onresult = async (event) => {
-      console.log(event)
       const transcript = Array.from(event.results)
         .map((result) => result[0])
         .map((result) => result.transcript)
@@ -108,8 +105,7 @@ const Streaming = () => {
       setTranscriptionFailed(false);
       setUserRequest(transcript);
       if (!isRecording && socket.connected) {
-        console.log("sending...")
-        streamTimeRef.current = Date.now()
+        streamTimeRef.current = Date.now();
         socket.emit("prompt", transcript);
       }
     };
@@ -120,10 +116,9 @@ const Streaming = () => {
     };
   };
 
-  
   socket.on("text-delta", async (text) => {
-      setAIResponse(AIResponse + text)
-    })
+    setAIResponse(AIResponse + text);
+  });
 
   return (
     <Container>
@@ -161,7 +156,11 @@ const Streaming = () => {
         </Col>
         <Col>
           <h1>Response:</h1>
-          <textarea className="aiResponse" value={AIResponse} disabled></textarea>
+          <textarea
+            className="aiResponse"
+            value={AIResponse}
+            disabled
+          ></textarea>
         </Col>
       </Row>
       <Row>

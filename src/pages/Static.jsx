@@ -17,8 +17,8 @@ const Static = () => {
   const [userRequest, setUserRequest] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [transcriptionFailed, setTranscriptionFailed] = useState(false);
-  const [staticTime, setStaticTime] = useState(0)
-  const staticTimeRef = useRef(0)
+  const [staticTime, setStaticTime] = useState(0);
+  const staticTimeRef = useRef(0);
 
   useEffect(() => {
     handleListen();
@@ -39,7 +39,9 @@ const Static = () => {
     }
     mic.onstart = () => {
       console.log("static mic on");
-      setUserRequest("")
+      setUserRequest("");
+      setAiResponse("");
+      setStaticTime(0);
     };
     mic.onresult = async (event) => {
       const transcript = Array.from(event.results)
@@ -48,14 +50,16 @@ const Static = () => {
         .join("");
       setTranscriptionFailed(false);
       setUserRequest(transcript);
-      staticTimeRef.current = Date.now()
+      staticTimeRef.current = Date.now();
       const res = await axios.post("/api/static", { prompt: transcript });
       setAiResponse(res.data.message);
-      console.log(res.data.audioPath);
       const AIAudio = new Audio(res.data.audioPath);
       AIAudio.load();
-      setStaticTime((Date.now() - staticTimeRef.current) / 1000)
+      setStaticTime((Date.now() - staticTimeRef.current) / 1000);
       AIAudio.play();
+      AIAudio.onended = async () => {
+        await axios.post("/api/cleanup", { filePath: res.data.audioPath });
+      };
     };
     mic.onerror = (event) => {
       console.log(event);
@@ -75,19 +79,19 @@ const Static = () => {
       </Row>
       <Row>
         <Col>
-            <h1>{isRecording ? "Recording..." : "Record your request:"}</h1>
-            <button
-              className={isRecording ? "micButtonRecording" : "micButton"}
-              onClick={() => setIsRecording((prevState) => !prevState)}
+          <h1>{isRecording ? "Recording..." : "Record your request:"}</h1>
+          <button
+            className={isRecording ? "micButtonRecording" : "micButton"}
+            onClick={() => setIsRecording((prevState) => !prevState)}
+          >
+            <IconContext.Provider
+              value={{ size: "4em", className: "global-class-name" }}
             >
-              <IconContext.Provider
-                value={{ size: "4em", className: "global-class-name" }}
-              >
-                <div>
-                  <BsFillMicFill />
-                </div>
-              </IconContext.Provider>
-            </button>
+              <div>
+                <BsFillMicFill />
+              </div>
+            </IconContext.Provider>
+          </button>
           <h2>Your request:</h2>
           <textarea
             className="requestText"

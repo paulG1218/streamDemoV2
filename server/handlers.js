@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import ElevenLabs from "elevenlabs-node";
-import fs from "fs"
+import fs from "fs";
 import path from "path";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -34,14 +34,13 @@ const handlers = {
         run = await openai.beta.threads.runs.retrieve(run.thread_id, run.id);
       }
       if (run.status === "completed") {
-        fs.unlink("staticAudio.mp3", (err) => {
-          if (err) throw err
-        })
         const messages = await openai.beta.threads.messages.list(run.thread_id);
+        const newFileName = "static" + Date.now() + ".mp3";
+        console.log(newFileName);
         voice
           .textToSpeech({
             // Required Parameters
-            fileName: "staticAudio.mp3",
+            fileName: newFileName,
             textInput: messages.data[0].content[0].text.value,
             stability: 0.5,
             similarityBoost: 0.5,
@@ -51,7 +50,7 @@ const handlers = {
           })
           .then((response) => {
             console.log(response);
-            const audioPath = path.join("staticAudio.mp3");
+            const audioPath = path.join(response.fileName);
 
             res.json({
               message: messages.data[0].content[0].text.value,
@@ -63,9 +62,16 @@ const handlers = {
       }
     }
   },
-  streamingAIResponse: async (req, res) => {
-    const { prompt } = req.body;
-    console.log(prompt);
+  cleanUp: async (req, res) => {
+    const { filePath } = req.body;
+    fs.access(filePath, (err) => {
+      if (err) throw err;
+      else {
+        fs.unlink(filePath, (err) => {
+          if (err) throw err;
+        });
+      }
+    });
   },
 };
 
