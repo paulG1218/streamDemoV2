@@ -53,7 +53,6 @@ async function* textChunker(chunksAsyncIterator) {
 async function stream(audioStreamAsyncIterator) {
   console.log("Started streaming audio");
   for await (const chunk of audioStreamAsyncIterator) {
-    console.log(chunk);
     theSocket.emit("audio-buffer", chunk);
     if (chunk.done) {
       break;
