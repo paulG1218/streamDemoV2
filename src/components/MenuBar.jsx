@@ -5,7 +5,7 @@ const MenuBar = () => {
   return (
     <Navbar expand="lg" sticky="top">
       <Container fluid>
-        <Navbar.Brand href="/">YOOOOOO</Navbar.Brand>
+        <Navbar.Brand href="/">Stream Demo</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse>
           <Nav className="me-auto">
